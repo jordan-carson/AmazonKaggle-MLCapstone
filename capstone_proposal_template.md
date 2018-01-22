@@ -29,11 +29,18 @@ I plan to build and implement a deep learning model for the final solution. This
 
 A convolution neural network will be built that can be trained on the training data (imagery.) The deep learning network will be built using tensorflow and Keras.
 
+
 ### Benchmark Model
 
 The benchmark deep learning model will be a convolution neural network that will be used to obtain a high accuracy rating similar to the individuals who classified in the top 20 tier of the Kaggle competition (on the public leaderboard). This is an ambitious goal.
 
 ### Evaluation Metrics
+
+The deep learning model will be trained 
+
+![f2 score](f2.png)
+
+The final solution and accuracy will be based on the above equation - f2 score.
 
 
 ### Project Design
