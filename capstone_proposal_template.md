@@ -22,6 +22,7 @@ The datasets for this project are all located in Kaggle. The data-set comes in a
 
 According to Kaggle, “The chips for this competition were derived from Planet's full-frame analytic scene products using our 4-band satellites in sun-synchronous orbit (SSO) and International Space Station (ISS) orbit. The set of chips for this competition use the GeoTiff format and each contain four bands of data: red, green, blue, and near infrared. The specific spectral response of the satellites can be found in the Planet documentation. Each of these channels is in 16-bit digital number format, and meets the specification of the Planet four band analytic ortho scene product."
 
+In this project I will be using jpg images as inputs into my deep learning model.
 
 ### Solution Statement
 
@@ -36,7 +37,7 @@ The benchmark deep learning model will be a convolution neural network that will
 
 ### Evaluation Metrics
 
-The deep learning model will be trained 
+The deep learning model will be evaluated using the function below, which is a way of combining precision and recall into a single score metric like F1, however recall is weighted higher than precision. But, more importantly, I will also implement a loss function (in particular a logloss function) that will be able to calibrate which deep learning model to pay more attention to when optimizing the labels recall.
 
 ![f2 score](f2.png)
 
@@ -44,5 +45,24 @@ The final solution and accuracy will be based on the above equation - f2 score.
 
 
 ### Project Design
+
+The first stage of the project will be to download and preprocess the imagery data from Kaggle.com. As I mentioned above, the data is available in both jpg and tiff file extensions - for the sake of this project, I will be using the jpg files with the pillow library. 
+Once I have gathered the information, the next step will be to preprocess the jpg files before being consumed by my deep learning methods. In this stage I will use data argumentation and feature engineering techniques from tensorflow, and keras. This will be a very involved part of my solution consisting of resizing, flipping, rotating, transposing and transforming the images in both the training and test sets. There are other involved image processing techniques such as haze removal for the algorithm to see the images more clearly. 
+
+After all the feature engineering, I will create a deep learning model consisting of convolution neural networks, with different numbers of parameters and layers to compare the best model to classify the images. I am assuming there will be a layer of fine-tuning the weights to figure out the best overall performance.
+
+Lastly, the goal of this project is using a combination of feature engineering and deep learning to create the best classification system. Friends and colleagues have identified using AWS EC2 as a popular cloud computing network to train the built deep learning model. I will evaluate if this is necessary, as this will not improve your accurary and precision.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
