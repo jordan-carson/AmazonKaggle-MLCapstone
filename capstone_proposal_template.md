@@ -54,7 +54,7 @@ After all the feature engineering, I will create a deep learning model consistin
 Lastly, the goal of this project is using a combination of feature engineering and deep learning to create the best classification system. Friends and colleagues have identified using AWS EC2 as a popular cloud computing network to train the built deep learning model. I will evaluate if this is necessary, as this will not improve your accurary and precision.
 
 
-###Sources:
+### Sources:
 
 1st place winner interview on Kaggle Competition:
 http://blog.kaggle.com/2017/10/17/planet-understanding-the-amazon-from-space-1st-place-winners-interview/
