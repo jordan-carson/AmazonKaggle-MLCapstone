@@ -39,7 +39,7 @@ The benchmark deep learning model will be a convolution neural network that will
 
 The deep learning model will be evaluated using the function below, which is a way of combining precision and recall into a single score metric like F1, however recall is weighted higher than precision. But, more importantly, I will also implement a loss function (in particular a logloss function) that will be able to calibrate which deep learning model to pay more attention to when optimizing the labels recall.
 
-![f2 score](f2.png)
+![f2 score](./docs/img/f2.png)
 
 The final solution and accuracy will be based on the above equation - f2 score.
 
