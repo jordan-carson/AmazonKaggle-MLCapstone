@@ -16,17 +16,29 @@ Computer vision is a well studied problem
 
 Given a dataset of satellite images for the Amazon, an algorithm needs to be developed to classify each image listed in the test set with a tag that is believed to be associated to the image. There are 17 possible tags: agriculture, artisinal_mine, bare_ground, blooming, blow_down, clear, cloudy, conventional_mine, cultivation, habitation, haze, partly_cloudy, primary, road, selective_logging, slash_burn, water. 
 
-The goal of this project is to train and build a deep learning model that is able to recognize an entire dataset of imagery from the amazon and properly label it with the appropriate tagging. 
+The goal of this project is to train and build a deep learning model that is able to recognize an entire dataset of imagery from the amazon and properly label it with the appropriate tagging.
 
-This competition contains over 40,000 training images, which could contain multiple labels.
+This competition contains over 40,000 training images, which could contain multiple labels. The 17 possible tags/labels can broadly be broken into three groups: atmospheric conditions, common land cover/land use phenomena, and rare land cover/land use phenomena. Each chip – a chip size is 256x256 pixels – will have at least one and the potential to have more than one atmospheric label and zero or more common and rare labels. See below for the sample chips and their labels as provided by Planet’s impact team.  
+
+The chip labels can be boisterous due to the labeling process and ambiguity of features, and scenes may omit class labels or have incorrect class labels. This problem and Kaggle challenge is to figure out how to work with noisy data and features that are ambiguous. 
+
+![chips](img/chips.jpg)
 
 ### Datasets and Inputs
 
-The datasets for this project are all located in Kaggle. The data-set comes in a train & test set split already defined for use. 
+![chips description](img/chipdesc.jpg)
+
+The datasets for this project are all located in Kaggle.
 
 According to Kaggle, “The chips for this competition were derived from Planet's full-frame analytic scene products using our 4-band satellites in sun-synchronous orbit (SSO) and International Space Station (ISS) orbit. The set of chips for this competition use the GeoTiff format and each contain four bands of data: red, green, blue, and near infrared. The specific spectral response of the satellites can be found in the Planet documentation. Each of these channels is in 16-bit digital number format, and meets the specification of the Planet four band analytic ortho scene product."
 
-In this project I will be using jpg images as inputs into my deep learning model.
+With the training set, the shape of the dataframe is (40669, 2) - thus we are given roughly 40,000 training images. With this dataset, there are a total of 116484 non-unique tags in all of the training images.
+
+The chart below shows the count of labels that are available in the training data-set. Kaggle distributes the image data in both training and test sets in jpg and tiff file extensions. In this project I will be using jpg images as inputs into my deep learning model.
+
+![distribution of labels](img/count_of_tags.png) 
+
+The distribution of the training labels shows that the data is not evenly distributed. In fact, it will be easier to predict the tags that occur more frequently then the ones that occur less frequently.
 
 ### Solution Statement
 
