@@ -77,6 +77,7 @@ http://blog.kaggle.com/2017/10/17/planet-understanding-the-amazon-from-space-1st
 
 http://www.di.ens.fr/willow/research/cnngeometric/
 
+http://search.arxiv.org:8081/paper.jsp?r=1712.00720&qid=1516684733782bas_nCnN_1902725897&qs=convolution+neural+network+and+computer+vision&in=cs
 
 
 
