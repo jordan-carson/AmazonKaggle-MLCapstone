@@ -10,7 +10,7 @@ According to Kaggle, “Every minute, the world loses an area of forest the size
 
 In this project, I will be creating a classification system to label satellite image chips with atmospheric conditions and various classes of land cover/land use. This is related to the Kaggle competition titled ‘Planet: Understanding the Amazon from Space’.
 
-Computer vision is a well studied problem
+
 
 ### Problem Statement
 
@@ -79,6 +79,8 @@ http://www.di.ens.fr/willow/research/cnngeometric/
 
 http://search.arxiv.org:8081/paper.jsp?r=1712.00720&qid=1516684733782bas_nCnN_1902725897&qs=convolution+neural+network+and+computer+vision&in=cs
 
+
+https://arxiv.org/pdf/1605.09081.pdf
 
 
 
