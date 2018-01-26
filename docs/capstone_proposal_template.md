@@ -6,10 +6,12 @@ January 15th, 2018
 
 
 ### Domain Background
+
+Climate change is drastically affecting the habitat in the Amazon and there is an on-going concern that the Amazon will be caught up in a set of "feedback loops" that could drastically speed up the pace of forest lost and degradation, leading to a point of no return. 
+
 According to Kaggle, “Every minute, the world loses an area of forest the size of 48 football fields. And deforestation in the Amazon Basin accounts for the largest share, contributing to reduced biodiversity, habitat loss, climate change, and other devastating effects. But better data about the location of deforestation and human encroachment on forests can help governments and local stakeholders respond more quickly and effectively.”
 
 In this project, I will be creating a classification system to label satellite image chips with atmospheric conditions and various classes of land cover/land use. This is related to the Kaggle competition titled ‘Planet: Understanding the Amazon from Space’.
-
 
 
 ### Problem Statement
@@ -49,25 +51,29 @@ A convolution neural network will be built that can be trained on the training d
 
 ### Benchmark Model
 
-The benchmark deep learning model will be a convolution neural network that will be used to obtain a high accuracy rating similar to the individuals who classified in the top 20 tier of the Kaggle competition (on the public leaderboard).
+Without using a deep learning model and manually mapping the labels and predictions to a binary score I was able to obtain a f2 score of ~80%. This will be my target benchmark rate to beat using deep learning methods. Additionally, there have been cases posted to Kaggle kernels of individuals achieving rates in the high ~90%s. This is a more aspirational goal as these individuals used deep learning and image processing techniques to greatly improve their accuracy.
+
+![benchmark score](/docs/img/benchmark%20score%20-f2.png)
+
 
 ### Evaluation Metrics
 
-The deep learning model will be evaluated using the function below, which is a way of combining precision and recall into a single score metric like F1, however recall is weighted higher than precision. But, more importantly, I will also implement a loss function (in particular a logloss function) that will be able to calibrate which deep learning model to pay more attention to when optimizing the labels recall.
+The deep learning model will be evaluated using the function below, which is a way of combining precision and recall into a single score metric like F1, however recall is weighted higher than precision. But, more importantly, I will also implement a loss function (in particular a log-loss function) that will be able to calibrate which deep learning model to pay more attention to when optimizing the labels recall.
 
 ![f2 score](img/f2.png)
 
-The final solution and accuracy will be based on the above equation - f2 score.
+The final solution and accuracy will be based on the above equation - f2 score. I will also use a logloss function to compare the different deep learning models to use as my final solution. Log-loss is another measure of accuracy that brings in probability confidence. Essentially, it is the cross entropy between the distribution of the true labels and the models predictions. Cross-entropy incorporates the detoriation of the distribution, plus the unpredictability when one assumes a different distribution that the true distribution. Therefore, log-loss is a measure to guage the noise that comes from using a predictor as opposed to the true labels. We must minimize the cross-entropy, or the log-loss as they are essentially the same, to maximize the accuracy of our proposed classifier.
 
 
 ### Project Design
 
 The first stage of the project will be to download and preprocess the imagery data from Kaggle.com. As I mentioned above, the data is available in both jpg and tiff file extensions - for the sake of this project, I will be using the jpg files with the pillow library. 
+
 Once I have gathered the information, the next step will be to preprocess the jpg files before being consumed by my deep learning methods. In this stage I will use data argumentation and feature engineering techniques from tensorflow, and keras. This will be a very involved part of my solution consisting of resizing, flipping, rotating, transposing and transforming the images in both the training and test sets. There are other involved image processing techniques such as haze removal for the algorithm to see the images more clearly. This was done by the 1st place winner on the Kaggle competition. See the source below for more detail. 
 
 After all the feature engineering, I will create a deep learning model consisting of convolution neural networks, with different numbers of parameters and layers to compare the best model to classify the images. I am assuming there will be a layer of fine-tuning the weights to figure out the best overall performance.
 
-Lastly, the goal of this project is using a combination of feature engineering and deep learning to create the best classification system. Friends and colleagues have identified using AWS EC2 as a popular cloud computing network to train the built deep learning model. I will evaluate if this is necessary, as this will not improve your accurary and precision.
+Lastly, the goal of this project is using a combination of feature engineering and deep learning to create the best classification system. Friends and colleagues have identified using AWS EC2 as a popular cloud computing network to train the built deep learning model. I will evaluate if this is necessary, as this will not improve my models accurary nor precision.
 
 
 ### Sources:
