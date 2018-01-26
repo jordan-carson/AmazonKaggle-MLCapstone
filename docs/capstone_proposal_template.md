@@ -53,7 +53,7 @@ A convolution neural network will be built that can be trained on the training d
 
 Without using a deep learning model and manually mapping the labels and predictions to a binary score I was able to obtain a f2 score of ~80%. This will be my target benchmark rate to beat using deep learning methods. Additionally, there have been cases posted to Kaggle kernels of individuals achieving rates in the high ~90%s. This is a more aspirational goal as these individuals used deep learning and image processing techniques to greatly improve their accuracy.
 
-![benchmark score](/docs/img/benchmark%20score%20-f2.png)
+![benchmark score](img/benchmark%20score%20-f2.png)
 
 
 ### Evaluation Metrics
