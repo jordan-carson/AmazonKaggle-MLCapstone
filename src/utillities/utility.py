@@ -26,7 +26,7 @@ def read_file(filepath, filename, filetype):
 
 # df_labels = read_file('/Users/jordancarson/PyCharmProjects/AmazonKaggle-MLCapstone/resources', 'train_v2.csv', 'csv')
 
-def plot_pictures(df_train, label, TRAIN_PATH):
+def plot_pictures(label, df_train, TRAIN_PATH):
 
     images = df_train[df_train[label] == 1].image_name.values
 
