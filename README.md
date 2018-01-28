@@ -4,9 +4,6 @@
 ##### By: Jordan Carson
 This is a Machine Learning Capstone - a multi-classification deep learning model to classify images in the Amazon Rainforest.
 
-```python
-code
-```
 
 You can find the project details here: [Capstone Proposal](docs/capstone_proposal_template.md)
 
