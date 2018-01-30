@@ -6,9 +6,6 @@ import matplotlib.pyplot as plt
 
 # this contains image_name and tags for training set
 
-class FileNotFoundError:
-    pass
-
 
 def read_file(filepath, filename, filetype):
     "module for reading different files"
