@@ -5,7 +5,7 @@
 This is a Machine Learning Capstone - a multi-classification deep learning model to classify images in the Amazon Rainforest.
 
 
-You can find the project details here: [Capstone Proposal](docs/capstone_proposal_template.md)
+You can find the project proposal details here: [Capstone Proposal](docs/capstone_proposal_template.md)
 
 
 
