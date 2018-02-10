@@ -19,3 +19,6 @@ loss = {
     'mae': 'mean_absolute_error',
     'categorical_crossentorpy': 'categorical_crossentropy'
 }
+
+# for _, i in optimizers.items():
+#     print(i)
