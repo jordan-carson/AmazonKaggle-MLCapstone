@@ -3,6 +3,9 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import os
 import gc
 
+import numpy as np
+from sklearn.metrics import fbeta_score
+
 import keras as k
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
@@ -88,3 +91,59 @@ x_train = np.array(x_train, np.float32) / 255.
 
 print(x_train.shape)
 print(y_train.shape)
+
+
+def get_optimal_threshhold(true_label, prediction, iterations = 100):
+
+    best_threshhold = [0.2]*17
+    for t in range(17):
+        best_fbeta = 0
+        temp_threshhold = [0.2]*17
+        for i in range(iterations):
+            temp_value = i / float(iterations)
+            temp_threshhold[t] = temp_value
+            temp_fbeta = fbeta(true_label, prediction > temp_threshhold)
+            if  temp_fbeta > best_fbeta:
+                best_fbeta = temp_fbeta
+                best_threshhold[t] = temp_value
+
+def fbeta(true_label, prediction):
+   return fbeta_score(true_label, prediction, beta=2, average='samples')
+
+
+
+def optimise_f2_thresholds(y, p, verbose=True, resolution=100):
+  def mf(x):
+    p2 = np.zeros_like(p)
+    for i in range(17):
+      p2[:, i] = (p[:, i] > x[i]).astype(np.int)
+    score = fbeta_score(y, p2, beta=2, average='samples')
+    return score
+
+  x = [0.2]*17
+  for i in range(17):
+    best_i2 = 0
+    best_score = 0
+    for i2 in range(resolution):
+      i2 /= resolution
+      x[i] = i2
+      score = mf(x)
+      if score > best_score:
+        best_i2 = i2
+        best_score = score
+    x[i] = best_i2
+    if verbose:
+      print(i, best_i2, best_score)
+
+  return x
+
+prediction = np.random.rand(50000,17)
+true_label = np.random.rand(50000,17) > 0.5
+
+start = time.time()
+t1 = get_optimal_threshhold(true_label, prediction)
+print(time.time() - start)
+
+start = time.time()
+t2 = optimise_f2_thresholds(true_label, prediction)
+print(time.time() - start)
