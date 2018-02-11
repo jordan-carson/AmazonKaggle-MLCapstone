@@ -1,20 +1,12 @@
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import os
-import gc
 import logging
-from src.utillities.common.CNN import optimise_f2_thresholds, n_crossvalidation
-
-import numpy as np
-from sklearn.metrics import fbeta_score
-
-
+from common.CNN import optimise_f2_thresholds
 
 import cv2
 from tqdm import tqdm
 
-from sklearn.cross_validation import train_test_split
-from sklearn.cross_validation import KFold
 from sklearn.metrics import fbeta_score
 import time
 
@@ -32,9 +24,13 @@ y_train = []
 df_train = pd.read_csv(os.path.join(MAIN, TRAIN_LABELS))
 df_test = pd.read_csv(os.path.join(MAIN, SUBMISSION_FILE))
 
+logging.info()
+
 flatten = lambda l: [item for sublist in l for item in sublist]
 labels = list(set(flatten([l.split(' ') for l in df_train['tags'].values])))
-
+labels2 = df_train['tags'].apply(lambda x: x.split(' '))
+print(labels2)
+print(labels)
 labels = ['blow_down',
           'bare_ground',
           'conventional_mine',
