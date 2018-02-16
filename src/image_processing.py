@@ -2,7 +2,10 @@ import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import os
 import logging
+from src.utillities.utility import init_logger
 from common.CNN import optimise_f2_thresholds
+from src.common.CNN import get_optimal_threshhold
+init_logger('/Users/jordancarson/Logs', 'image_processing')
 
 import cv2
 from tqdm import tqdm
@@ -21,16 +24,16 @@ x_train = []
 x_test = []
 y_train = []
 
+logging.info('Reading TRAINING LABELS datasource')
 df_train = pd.read_csv(os.path.join(MAIN, TRAIN_LABELS))
+logging.info('We read a training dataframe of shape' + str(df_train.shape))
+
 df_test = pd.read_csv(os.path.join(MAIN, SUBMISSION_FILE))
 
-logging.info()
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 labels = list(set(flatten([l.split(' ') for l in df_train['tags'].values])))
 labels2 = df_train['tags'].apply(lambda x: x.split(' '))
-print(labels2)
-print(labels)
 labels = ['blow_down',
           'bare_ground',
           'conventional_mine',
@@ -75,37 +78,17 @@ for f, tags in tqdm(df_train.values[:18000], miniters=1000):
     x_train.append(cv2.resize(img, (32, 32)))
     y_train.append(targets)
 
-# for f, tags in tqdm(df_test.values, miniters=1000):
-#     img = cv2.imread(os.path.join(MAIN, TEST_PATH) + '{}.jpg'.format(f))
-#     x_test.append(cv2.resize(img, (32, 32)))
+for f, tags in tqdm(df_test.values[:18000], miniters=1000):
+    img = cv2.imread(os.path.join(MAIN, TEST_PATH) + '{}.jpg'.format(f))
+    x_test.append(cv2.resize(img, (32, 32)))
 
 y_train = np.array(y_train, np.uint8)
 x_train = np.array(x_train, np.float32) / 255.
-# x_test = np.array(x_test, np.float32) / 255.
+x_test = np.array(x_test, np.float32) / 255.
 
+print(x_test.shape)
 print(x_train.shape)
 print(y_train.shape)
-
-
-def get_optimal_threshhold(true_label, prediction, iterations = 100):
-
-    best_threshhold = [0.2]*17
-    for t in range(17):
-        best_fbeta = 0
-        temp_threshhold = [0.2]*17
-        for i in range(iterations):
-            temp_value = i / float(iterations)
-            temp_threshhold[t] = temp_value
-            temp_fbeta = fbeta(true_label, prediction > temp_threshhold)
-            if temp_fbeta > best_fbeta:
-                best_fbeta = temp_fbeta
-                best_threshhold[t] = temp_value
-
-
-def fbeta(true_label, prediction):
-   return fbeta_score(true_label, prediction, beta=2, average='samples')
-
-
 
 
 prediction = np.random.rand(50000, 17)
@@ -118,6 +101,8 @@ start = time.time()
 
 t2 = optimise_f2_thresholds(true_label, prediction)
 print(time.time() - start)
+
+
 
 
 
