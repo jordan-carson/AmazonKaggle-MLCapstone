@@ -30,11 +30,11 @@ def plot_pictures(label, df_train, TRAIN_PATH):
 
 
 def init_logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
-    logging.getLogger().setLevel(logging.NOTSET) #0
+    logging.getLogger().setLevel(logging.NOTSET)  # 0
     logging.getLogger().handlers = []
     timestamp = datetime.datetime.now().strftime('%Y%m%d')
     logfile_name = process_name + '_' + str(socket.gethostname()) + '_' + str(os.getenv('Username')) \
-                   + '_' + timestamp + '.log'
+                   + '_' + timestamp + '.txt'
     logfile_path = os.path.join(log_dir, logfile_name)
 
     # create directory if it doesn't already exist
