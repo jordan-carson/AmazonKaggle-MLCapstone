@@ -10,18 +10,37 @@ from sklearn.cross_validation import KFold
 import numpy as np
 import time
 import os
-
+from src.utillities.utility import init_logger
 import cv2
 import sys
-print([i for i in sys.path])
+import logging
+init_logger('~/PycharmProjects/AmazonKaggle-MLCapstone/Logs', 'Utility')
 
+
+
+def get_optimal_threshhold(true_label, prediction, iterations = 100):
+
+    best_threshhold = [0.2]*17
+    for t in range(17):
+        best_fbeta = 0
+        temp_threshhold = [0.2]*17
+        for i in range(iterations):
+            temp_value = i / float(iterations)
+            temp_threshhold[t] = temp_value
+            temp_fbeta = fbeta(true_label, prediction > temp_threshhold)
+            if temp_fbeta > best_fbeta:
+                best_fbeta = temp_fbeta
+                best_threshhold[t] = temp_value
+
+
+def fbeta(true_label, prediction):
+   return fbeta_score(true_label, prediction, beta=2, average='samples')
 
 
 def create_model_vgg16(image_dimensions=(128, 128, 3)):
     input_tensor = Input(shape=image_dimensions)
-    base_model = VGG16(include_top=False, weights='imagenet', input_shape=image_dimensions)
-
     bn = BatchNormalization()(input_tensor)
+    base_model = VGG16(include_top=False, weights='imagenet', input_shape=image_dimensions)
     x = base_model()(bn)
     x = Flatten()(x)
     output = Dense(17, activation='sigmoid')(x)
@@ -29,12 +48,12 @@ def create_model_vgg16(image_dimensions=(128, 128, 3)):
     return model
 
 
-def fbeta(model, X_valid, y_valid):
+def fbeta_2(model, X_valid, y_valid):
     p_valid = model.predict(X_valid)
     return fbeta_score(y_valid, np.array(p_valid) > 0.2, beta=2, average='samples')
 
 def n_crossvalidation(nfolds, num_fold, sum_score, y_train, x_train, y_test, x_test):
-
+    logging.info("creating cross validation before building the network model")
     yfull_test = []
     yfull_train = []
 
