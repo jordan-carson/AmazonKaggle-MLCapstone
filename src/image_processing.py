@@ -14,8 +14,17 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-
+from keras.utils import
 import tensorflow as tf
+
+
+"""
+
+    Hi, ED
+
+"""
+
+
 
 init_logger('/Users/jordancarson/Logs', 'image_processing')
 
@@ -52,8 +61,8 @@ df_test = pd.read_csv(os.path.join(MAIN, SUBMISSION_FILE))
 # labels = list(set(flatten([l.split(' ') for l in df_labels['tags'].values])))
 # print(labels)
 labels_list = []
-for strtag in df_labels.tags.values:
-    labels = strtag.split(' ')
+for tag in df_labels.tags.values:
+    labels = tag.split(' ')
     for label in labels:
         if label not in labels_list:
             labels_list.append(label)
@@ -78,23 +87,9 @@ for strtag in df_labels.tags.values:
 #           'water',
 #           'cloudy']
 
-label_map = {'agriculture': 14,
-             'artisinal_mine': 5,
-             'bare_ground': 1,
-             'blooming': 3,
-             'blow_down': 0,
-             'clear': 10,
-             'cloudy': 16,
-             'conventional_mine': 2,
-             'cultivation': 4,
-             'habitation': 9,
-             'haze': 6,
-             'partly_cloudy': 13,
-             'primary': 7,
-             'road': 11,
-             'selective_logging': 12,
-             'slash_burn': 8,
-             'water': 15}
+label_map = {'blow_down': 0,'bare_ground': 1,'conventional_mine': 2,'blooming': 3,'cultivation': 4,'artisinal_mine': 5,
+'haze': 6,'primary': 7,'slash_burn': 8,'habitation': 9,'clear': 10,'road': 11,'selective_logging': 12,
+'partly_cloudy': 13,'agriculture': 14, 'water': 15,'cloudy': 16 }
 
 for f, tags in tqdm(df_labels.values[:18000], miniters=1000):
     train_img = cv2.imread(os.path.join(MAIN, TRAIN_PATH) + '{}.jpg'.format(f))
@@ -129,6 +124,17 @@ true_label = np.random.rand(18000, 17) > 0.5
 # print(time.time() - start)
 
 
+
+"""
+    module takes 388.4562318325043 to run or 6.5 mins
+"""
+def build_model():
+    """
+    TODO: add below for to this build model function and calculate the time this entire model takes to run
+
+    :return:
+    """
+
 nfolds = 3
 
 num_fold = 0
@@ -138,10 +144,6 @@ yfull_test = []
 yfull_train = []
 
 kf = KFold(len(y_train), n_folds=nfolds, shuffle=True, random_state=1)
-
-"""
-    module takes 388.4562318325043 to run
-"""
 
 
 for train_index, test_index in kf:
@@ -193,8 +195,8 @@ for train_index, test_index in kf:
     print("Optimizing prediction threshold")
     print(optimise_f2_thresholds(Y_valid, p_valid))
 
-    p_test = model.predict(x_train, batch_size=128, verbose=2)
-    yfull_train.append(p_test)
+    p_train = model.predict(x_train, batch_size=128, verbose=2)
+    yfull_train.append(p_train)
 
     p_test = model.predict(x_test, batch_size=128, verbose=2)
     yfull_test.append(p_test)
