@@ -5,14 +5,15 @@ import logging
 import logging.handlers
 import sys
 import datetime
-
+import zipfile
 import random
 from PIL import Image
 import matplotlib.pyplot as plt
 
 # df_labels = read_file('/Users/jordancarson/PyCharmProjects/AmazonKaggle-MLCapstone/resources', 'train_v2.csv', 'csv')
 
-def plot_pictures(label, df_train, TRAIN_PATH):
+
+def plot_pictures(label, df_train, train_path):
 
     images = df_train[df_train[label] == 1].image_name.values
 
@@ -21,7 +22,7 @@ def plot_pictures(label, df_train, TRAIN_PATH):
 
     for i in range(0,9):
         f = random.choice(images)
-        img = Image.open(os.path.join(TRAIN_PATH, f + '.jpg'))
+        img = Image.open(os.path.join(train_path, f + '.jpg'))
         ax[i].imshow(img)
         ax[i].set_xticks([])
         ax[i].set_yticks([])
@@ -65,39 +66,4 @@ def init_logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
     logging.getLogger().addHandler(stdout_h)
 
     logging.info('Logging initialised. PID ' + str(os.getpid()))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

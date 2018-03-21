@@ -17,7 +17,6 @@ import logging
 init_logger('~/PycharmProjects/AmazonKaggle-MLCapstone/Logs', 'Utility')
 
 
-
 def get_optimal_threshhold(true_label, prediction, iterations = 100):
 
     best_threshhold = [0.2]*17
@@ -51,6 +50,7 @@ def create_model_vgg16(image_dimensions=(128, 128, 3)):
 def fbeta_2(model, X_valid, y_valid):
     p_valid = model.predict(X_valid)
     return fbeta_score(y_valid, np.array(p_valid) > 0.2, beta=2, average='samples')
+
 
 def n_crossvalidation(nfolds, num_fold, sum_score, y_train, x_train, y_test, x_test):
     logging.info("creating cross validation before building the network model")
