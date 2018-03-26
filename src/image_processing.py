@@ -120,117 +120,6 @@ true_label = np.random.rand(18000, 17) > 0.5
     module takes 388.4562318325043 to run or 6.5 mins
 """
 
-
-def Amazon_Sequential_Custom_Build(input_shape = (128, 128), weight_path=None):
-    """
-
-    :param input_shape:
-    :return:
-    """
-    custom_model = Sequential()
-    custom_model.add(BatchNormalization(input_shape=input_shape))
-
-    custom_model.add(Conv2D(32, kernel_size=(3, 3), padding='same', activation='relu'))
-    custom_model.add(Conv2D(32, (3, 3), activation='relu'))
-    custom_model.add(MaxPooling2D(pool_size=(2, 2)))
-    custom_model.add(Dropout(0.25))
-
-    custom_model.add(Conv2D(64, kernel_size=(3, 3), padding='same', activation='relu'))
-    custom_model.add(Conv2D(64, (3, 3), activation='relu'))
-    custom_model.add((MaxPooling2D(pool_size=(2, 2))))
-    custom_model.add(Dropout(0.25))
-
-    custom_model.add(Conv2D(128, kernel_size=(3, 3), padding='same', activation='relu'))
-    custom_model.add(Conv2D(128, (3, 3), padding='same', activation='relu'))
-    custom_model.add(MaxPooling2D(pool_size=(2, 2)))
-    custom_model.add(Dropout(0.25))
-
-    custom_model.add(Conv2D(256, kernel_size=(3, 3), padding='same', activation='relu'))
-    custom_model.add(Conv2D(256, (3, 3), activation='relu'))
-    custom_model.add(MaxPooling2D(pool_size=(2, 2)))
-    custom_model.add(Dropout(0.25))
-
-    custom_model.add(Flatten())
-    custom_model.add(Dense(512, activation='relu'))
-    custom_model.add(BatchNormalization())
-    custom_model.add(Dropout(0.5))
-    custom_model.add(Dense(17, activation='sigmoid'))
-    if (weight_path!=None):
-        if os.path.isfile(weight_path):
-            custom_model.load_weights(weight_path)
-    return custom_model
-
-
-def Amazon_Model_VGG19(input_shape=(128, 128, 3), weight_path=None):
-    from keras.applications.vgg19 import VGG19
-
-    base_model = VGG19(include_top=False, weights='imagenet', input_shape=input_shape)
-
-    model = Sequential()
-    model.add(BatchNormalization(input_shape=input_shape))
-    model.add(base_model)
-    model.add(Flatten())
-    model.add(Dense(17, activation='sigmoid'))
-    if (weight_path!=None):
-        if os.path.isfile(weight_path):
-            model.load_weights(weight_path)
-    return model
-
-
-def Amazon_Model_VGG16(input_shape=(128, 128, 3), weight_path=None):
-    from keras.applications.vgg16 import VGG16
-
-    base_model = VGG16(include_top=False, weights='imagenet', input_shape=input_shape)
-
-    model = Sequential()
-    model.add(BatchNormalization(input_shape=input_shape))
-    model.add(base_model)
-    model.add(Flatten())
-    model.add(Dense(17, activation='sigmoid'))
-    if (weight_path!=None):
-        if os.path.isfile(weight_path):
-            model.load_weights(weight_path)
-    return model
-
-def KFold_Train(x_train, y_train, n_folds=3, batch_size=128):
-    model = Amazon_Sequential_Custom_Build()
-
-    kfold = KFold(len(y_train), n_folds=n_folds, shuffle=False, random_state=1)
-    num_fold = 0
-
-    for train_index, test_index in kf:
-
-        X_train = x_train[train_index]
-        Y_train = y_train[train_index]
-        X_valid = x_train[test_index]
-        Y_valid = y_train[test_index]
-
-        num_fold += 1
-        print('Start KFold number {} from {}'.format(num_fold, n_folds))
-        print('Split train: ', len(X_train), len(Y_train))
-        print('Split valid: ', len(X_valid), len(Y_valid))
-        weight_path = os.path.join('', 'weights_kfold_' + str(num_fold) + '.h5')
-
-        if os.path.isfile(weight_path):
-            model.load_weights(weight_path)
-
-        epochs_arr = [60, 15, 15]
-        learn_rates = [0.001, 0.0001, 0.00001]
-
-        for learn_rate, epochs in zip(learn_rates, epochs_arr):
-            optimizer = optimizers.Adam(lr=learn_rate)
-            model.compile(loss='binary_crossentropy', metrics=['accuracy'], optimizer=optimizer)
-            callbacks = [EarlyStopping(monitor='val_loss', patience=2, verbose=0),
-                         ModelCheckpoint(weight_path, monitor='val_loss', save_best_only=True, verbose=0)]
-
-            model.fit(x=X_train, y=Y_train, validation_data=(X_valid, Y_valid),
-                      batch_size=batch_size, verbose=2, epochs=epochs, callbacks=callbacks, shuffle=True)
-
-        p_valid = model.predict(X_valid, batch_size=batch_size, verbose=2)
-        print(fbeta_score(Y_valid, np.array(p_valid) > 0.18, beta=2, average='samples'))
-
-
-
 nfolds = 3
 
 num_fold = 0
@@ -317,32 +206,31 @@ for train_index, test_index in kf:
     model.add(Dropout(0.5))
     model.add(Dense(17, activation='sigmoid'))
 
-    epochs_arr = [20, 5, 5]
-    learn_rates = [0.001, 0.0001, 0.00001]
-
-    for learn_rate, epochs in zip(learn_rates, epochs_arr):
-        opt = optimizers.Adam(lr=learn_rate)
-        model.compile(loss='binary_crossentropy',
-                      # We NEED binary here, since categorical_crossentropy l1 norms the output before calculating loss.
-                      optimizer=opt,
-                      metrics=['accuracy'])
-        callbacks = [EarlyStopping(monitor='val_loss', patience=2, verbose=0),
-                     ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0)]
-
-        model.fit(x=X_train, y=Y_train, validation_data=(X_valid, Y_valid),
-                  batch_size=128, verbose=2, epochs=epochs, callbacks=callbacks, shuffle=True)
-
-
-    # model.compile(loss='binary_crossentropy', optimizer=Adam(lr=1e-4), metrics=['accuracy'])
+    # epochs_arr = [20, 5, 5]
+    # learn_rates = [0.001, 0.0001, 0.00001]
     #
-    # callbacks = [
-    #     EarlyStopping(monitor='val_loss', patience=2, verbose=0, min_delta=1e-4),  # adding min_delta
-    #     ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, cooldown=0, min_lr=1e-7, verbose=1),  # new callback
-    #     ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0)]
+    # for learn_rate, epochs in zip(learn_rates, epochs_arr):
+    #     opt = optimizers.Adam(lr=learn_rate)
+    #     model.compile(loss='binary_crossentropy',
+    #                   # We NEED binary here, since categorical_crossentropy l1 norms the output before calculating loss.
+    #                   optimizer=opt,
+    #                   metrics=['accuracy'])
+    #     callbacks = [EarlyStopping(monitor='val_loss', patience=2, verbose=0),
+    #                  ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0)]
     #
-    # model.fit(x=X_train, y=Y_train, validation_data=(X_valid, Y_valid),
-    #           batch_size=128, verbose=2, epochs=10, callbacks=callbacks,
-    #           shuffle=True)
+    #     model.fit(x=X_train, y=Y_train, validation_data=(X_valid, Y_valid),
+    #               batch_size=128, verbose=2, epochs=epochs, callbacks=callbacks, shuffle=True)
+
+    model.compile(loss='binary_crossentropy', optimizer=Adam(lr=1e-4), metrics=['accuracy'])
+
+    callbacks = [
+        EarlyStopping(monitor='val_loss', patience=2, verbose=0, min_delta=1e-4),  # adding min_delta
+        ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, cooldown=0, min_lr=1e-7, verbose=1),  # new callback
+        ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0)]
+
+    model.fit(x=X_train, y=Y_train, validation_data=(X_valid, Y_valid),
+              batch_size=128, verbose=2, epochs=10, callbacks=callbacks,
+              shuffle=True)
 
     if os.path.isfile(kfold_weights_path):
         model.load_weights(kfold_weights_path)
@@ -374,13 +262,17 @@ for i in tqdm(range(result.shape[0]), miniters=1000):
     ' '.join(list(a.index))
     preds.append(' '.join(list(a.index)))
 
-print(preds)
+# print(preds)
+print("the size of preds list is " + str(len(preds)))
 
 try:
     df_test['tags'] = preds
 except Exception as err:
     print(err)
     pass
+
+# print("the size of df_test is " + str(len(df_test)))
+print("the shape of df_test is " + str(df_test.shape))
 
 # df_test['tags'] = preds
 # print(df_test)
