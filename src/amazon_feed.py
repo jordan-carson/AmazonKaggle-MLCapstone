@@ -113,7 +113,7 @@ class AmazonProcessor(BaseTask):
 
     def build_training_classifier(self, x_train, y_train):
 
-        model = self.amazon_sequential_custom()
+        model = self.amazon_sequential_custom_build()
 
         logging.info('Building training model')
         kf = KFold(len(y_train), n_folds=self.nfolds, shuffle=True, random_state=1)
@@ -128,9 +128,9 @@ class AmazonProcessor(BaseTask):
             Y_valid = y_train[test_index]
 
             num_fold += 1
-            print('Start KFold number {} from {}'.format(num_fold, nfolds))
-            print('Split train: ', len(X_train), len(Y_train))
-            print('Split valid: ', len(X_valid), len(Y_valid))
+            logging.info('KFold {} out of {}'.format(num_fold, self.nfolds))
+            logging.info('Split train size: ', len(X_train), len(Y_train))
+            logging.info('Split valid size: ', len(X_valid), len(Y_valid))
 
             kfold_weights_path = os.path.join('.weights/', 'weights_kfold_' + str(num_fold) + '.h5')
 
@@ -149,48 +149,17 @@ class AmazonProcessor(BaseTask):
             if os.path.isfile(kfold_weights_path):
                 model.load_weights(kfold_weights_path)
 
-            p_valid = model.predict(X_valid, batch_size=self.batch_size, verbose=2)
-            print(fbeta_score(Y_valid, np.array(p_valid) > 0.18, beta=2, average='samples'))
-
-    def predict(self):
-
-        for f, tags in tqdm(self.submission_file.values[:18000], miniters=1000):
-            test_img = cv2.imread(os.path.join(self.main, self.test_path) + '{}.jpg'.format(f))
-            self.x_test.append(cv2.resize(test_img, (64, 64)))
-
-        self.x_test = np.array(self.x_test, np.float32) / 255.
-        return self.x_test
-
-
-    def kfold_predict(self, x_test, nfolds=3, batch_size=128):
-        model = self.amazon_sequential_custom_build()
-        yfull_test = []
-
-        for num_fold in range(1, nfolds + 1):
-            weight_path = os.path.join('' + 'weights_kfold_' + str(num_fold) + '.h5')
-
-            if os.path.isfile(weight_path):
-                model.load_weights(weight_path)
-
-            p_test = model.predict(x_test, batch_size=batch_size, verbose=2)
-            yfull_test.append(p_test)
-
-        result = np.array(yfull_test[0])
-        for i in range(1, nfolds):
-            result += np.array(yfull_test[i])
-        result /= nfolds
-
-        return result
+            # p_valid = model.predict(X_valid, batch_size=self.batch_size, verbose=2)
+            p_test = model.predict(self.x_test, batch_size=self.batch_size, verbose=2)
+            logging.info(fbeta_score(Y_valid, np.array(p_test) > 0.18, beta=2, average='samples'))
 
     def amazon_sequential_custom_build(self, input_shape=(128, 128), weight_path=None):
         """
-
         :param input_shape:
-        :return:
+        :return: Keras Object
         """
         custom_model = Sequential()
         custom_model.add(BatchNormalization(input_shape=input_shape))
-
         custom_model.add(Conv2D(32, kernel_size=(3, 3), padding='same', activation='relu'))
         custom_model.add(Conv2D(32, (3, 3), activation='relu'))
         custom_model.add(MaxPooling2D(pool_size=(2, 2)))
@@ -220,3 +189,79 @@ class AmazonProcessor(BaseTask):
             if os.path.isfile(weight_path):
                 custom_model.load_weights(weight_path)
         return custom_model
+
+    def predict(self):
+
+        for f, tags in tqdm(self.submission_file.values[:18000], miniters=1000):
+            test_img = cv2.imread(os.path.join(self.main, self.test_path) + '{}.jpg'.format(f))
+            self.x_test.append(cv2.resize(test_img, (64, 64)))
+
+        self.x_test = np.array(self.x_test, np.float32) / 255.
+
+
+        return self.x_test
+
+    def do(self):
+
+
+        result = self.kfold_predict(self.x_test)
+
+
+        result = np.array(yfull_test[0])
+        for i in range(1, nfolds):
+            result += np.array(yfull_test[i])
+        result /= nfolds
+        result = pd.DataFrame(result, columns=labels_list)
+        result = pd.DataFrame(result, columns=labels)
+
+        thres = {'blow_down': 0.2,
+                 'bare_ground': 0.138,
+                 'conventional_mine': 0.1,
+                 'blooming': 0.168,
+                 'cultivation': 0.204,
+                 'artisinal_mine': 0.114,
+                 'haze': 0.204,
+                 'primary': 0.204,
+                 'slash_burn': 0.38,
+                 'habitation': 0.17,
+                 'clear': 0.13,
+                 'road': 0.156,
+                 'selective_logging': 0.154,
+                 'partly_cloudy': 0.112,
+                 'agriculture': 0.164,
+                 'water': 0.182,
+                 'cloudy': 0.076}
+
+        preds = []
+        for i in tqdm(range(result.shape[0]), miniters=1000):
+            a = result.ix[[i]]
+            pred_tag = []
+            for k, v in thres.items():
+                if (a[k][i] >= v):
+                    pred_tag.append(k)
+            preds.append(' '.join(pred_tag))
+
+        df_test['tags'] = preds
+        df_test.to_csv('sub.csv', index=False)
+
+
+    def kfold_predict(self, x_test, nfolds=3, batch_size=128):
+        model = self.amazon_sequential_custom_build()
+        yfull_test = []
+
+        for num_fold in range(1, nfolds + 1):
+            weight_path = os.path.join('' + 'weights_kfold_' + str(num_fold) + '.h5')
+
+            if os.path.isfile(weight_path):
+                model.load_weights(weight_path)
+
+            p_test = model.predict(x_test, batch_size=batch_size, verbose=2)
+            yfull_test.append(p_test)
+
+        result = np.array(yfull_test[0])
+        for i in range(1, nfolds):
+            result += np.array(yfull_test[i])
+        result /= nfolds
+
+        return result
+
