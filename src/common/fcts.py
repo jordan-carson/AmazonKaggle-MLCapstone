@@ -1,20 +1,82 @@
+import numpy as np
+import time
+import pandas as pd
+import os
+import socket
+import logging
+import logging.handlers
+import sys
+import datetime
+import random
+from PIL import Image
+import matplotlib.pyplot as plt
+
+# Deep Learning imports
 from keras.applications.vgg16 import VGG16
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten, Input
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Dense, Dropout, Flatten, Input, Conv2D, MaxPooling2D
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.layers.normalization import BatchNormalization
 from sklearn.metrics import fbeta_score
 from keras.models import Model
 from sklearn.cross_validation import KFold
-import numpy as np
-import time
-import os
-from src.utillities.utility import init_logger
-import cv2
-import sys
-import logging
-init_logger('~/PycharmProjects/AmazonKaggle-MLCapstone/Logs', 'Utility')
+
+
+# init_logger('~/PycharmProjects/AmazonKaggle-MLCapstone/Logs', 'Utility')
+
+def plot_pictures(label, df_train, train_path):
+
+    images = df_train[df_train[label] == 1].image_name.values
+
+    fig , ax = plt.subplots(nrows=3, ncols=3, figsize=(8,8))
+    ax = ax.flatten()
+
+    for i in range(0,9):
+        f = random.choice(images)
+        img = Image.open(os.path.join(train_path, f + '.jpg'))
+        ax[i].imshow(img)
+        ax[i].set_xticks([])
+        ax[i].set_yticks([])
+        ax[i].set_title("{}s h:{}s w:{}s".format(f, img.height, img.width))
+    plt.tight_layout()
+
+
+def init_logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
+    logging.getLogger().setLevel(logging.NOTSET)  # 0
+    logging.getLogger().handlers = []
+    timestamp = datetime.datetime.now().strftime('%Y%m%d')
+    logfile_name = process_name + '_' + str(socket.gethostname()) + '_' + str(os.getenv('Username')) \
+                   + '_' + timestamp + '.txt'
+    logfile_path = os.path.join(log_dir, logfile_name)
+
+    # create directory if it doesn't already exist
+    try:
+        os.makedirs(log_dir)
+    except:
+        pass
+
+    # delete previous version of this logfile if it exists
+
+    try:
+        os.remove(logfile_name)
+    except:
+        pass
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    # file handler
+    file_h = logging.handlers.RotatingFileHandler(logfile_path, mode='w', maxBytes=50*1024*1024,
+                                                  backupCount=2)
+    file_h.setLevel(loglevel_file)  # 20 = info
+    file_h.setFormatter(formatter)
+
+    # stdout handler
+    stdout_h = logging.StreamHandler(stream=sys.stdout)
+    stdout_h.setLevel(loglevel_stdout)  # 40 = error
+    stdout_h.setFormatter(formatter)
+    logging.getLogger().addHandler(stdout_h)
+
+    logging.info('Logging initialised. PID ' + str(os.getpid()))
 
 
 def get_optimal_threshhold(true_label, prediction, iterations = 100):
@@ -32,10 +94,6 @@ def get_optimal_threshhold(true_label, prediction, iterations = 100):
                 best_threshhold[t] = temp_value
 
 
-def fbeta(true_label, prediction):
-   return fbeta_score(true_label, prediction, beta=2, average='samples')
-
-
 def create_model_vgg16(image_dimensions=(128, 128, 3)):
     input_tensor = Input(shape=image_dimensions)
     bn = BatchNormalization()(input_tensor)
@@ -45,6 +103,10 @@ def create_model_vgg16(image_dimensions=(128, 128, 3)):
     output = Dense(17, activation='sigmoid')(x)
     model = Model(input_tensor, output)
     return model
+
+
+def fbeta(true_label, prediction):
+   return fbeta_score(true_label, prediction, beta=2, average='samples')
 
 
 def fbeta_2(model, X_valid, y_valid):
@@ -116,7 +178,6 @@ def n_crossvalidation(nfolds, num_fold, sum_score, y_train, x_train, y_test, x_t
         yfull_test.append(p_test)
 
 
-
 def optimise_f2_thresholds(y, p, verbose=True, resolution=100):
   def mf(x):
     p2 = np.zeros_like(p)
@@ -140,14 +201,6 @@ def optimise_f2_thresholds(y, p, verbose=True, resolution=100):
     if verbose:
       print(i, best_i2, best_score)
   return x
-
-
-
-
-
-
-
-
 
 
 
