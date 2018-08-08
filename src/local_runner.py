@@ -1,4 +1,3 @@
-
 """
 
     Local Runner:
@@ -6,7 +5,6 @@
         pass in parameters for the model, it will assign them to a data-type based on its contents.
 
 """
-
 from src.amazon_feed import AmazonProcessor
 params = {}
 params['main'] = '/Users/jordancarson/PyCharmProjects/AmazonKaggle-MLCapstone'
