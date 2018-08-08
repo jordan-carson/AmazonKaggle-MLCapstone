@@ -55,9 +55,9 @@ class AmazonProcessor(BaseTask):
 
         self.image_size = self.resize_image[0]
         self.df_labels = self._get_labels()
+        self.submission_file = self._get_test()
 
         return self.result
-
 
     def _get_labels(self):
         logging.info('Reading training labels')
@@ -153,6 +153,80 @@ class AmazonProcessor(BaseTask):
             p_test = model.predict(self.x_test, batch_size=self.batch_size, verbose=2)
             logging.info(fbeta_score(Y_valid, np.array(p_test) > 0.18, beta=2, average='samples'))
 
+
+    def build_prediction(self):
+
+        x_test = []
+
+        for f, tags in tqdm(self.submission_file.values, miniters=1000):
+            test_img = cv2.imread(os.path.join(self.main, self.test_path) + '{}.jpg'.format(f))
+            x_test.append(cv2.resize(test_img, (64, 64)))
+
+        x_test = np.array(x_test, np.float32) / 255.
+
+        result = self.kfold_predict(x_test)
+
+        labels_list = []
+        for tag in self.df_labels.tags.values:
+            labels = tag.split(' ')
+            for label in labels:
+                if label not in labels_list:
+                    labels_list.append(label)
+
+        result = pd.DataFrame(result, columns=labels_list)
+
+        thres = {'blow_down': 0.2,
+                 'bare_ground': 0.138,
+                 'conventional_mine': 0.1,
+                 'blooming': 0.168,
+                 'cultivation': 0.204,
+                 'artisinal_mine': 0.114,
+                 'haze': 0.204,
+                 'primary': 0.204,
+                 'slash_burn': 0.38,
+                 'habitation': 0.17,
+                 'clear': 0.13,
+                 'road': 0.156,
+                 'selective_logging': 0.154,
+                 'partly_cloudy': 0.112,
+                 'agriculture': 0.164,
+                 'water': 0.182,
+                 'cloudy': 0.076}
+
+        preds = []
+        for i in tqdm(range(result.shape[0]), miniters=1000):
+            res = result.ix[[i]]
+            pred_tag = []
+            for k, v in thres.items():
+                if res[k][i] >= v:
+                    pred_tag.append(k)
+            preds.append(' '.join(pred_tag))
+
+        df_test = pd.DataFrame()
+        df_test['tags'] = preds
+        df_test.to_csv('sub.csv', index=False)
+
+
+    def predict(self, x_test, nfolds=3, batch_size=128):
+        model = self.amazon_sequential_custom_build()
+        y_test = []
+
+        for num_fold in range(1, self.nfolds + 1):
+            weight_path = os.path.join('' + 'weights_kfold_' + str(num_fold) + '.h5')
+
+            if os.path.isfile(weight_path):
+                model.load_weights(weight_path)
+
+            p_test = model.predict(x_test, batch_size=batch_size, verbose=2)
+            y_test.append(p_test)
+
+        result = np.array(y_test[0])
+        for i in range(1, self.nfolds):
+            result += np.array(y_test[i])
+        result /= nfolds
+
+        return result
+
     def amazon_sequential_custom_build(self, input_shape=(128, 128), weight_path=None):
         """
         :param input_shape:
@@ -189,79 +263,3 @@ class AmazonProcessor(BaseTask):
             if os.path.isfile(weight_path):
                 custom_model.load_weights(weight_path)
         return custom_model
-
-    def predict(self):
-
-        for f, tags in tqdm(self.submission_file.values[:18000], miniters=1000):
-            test_img = cv2.imread(os.path.join(self.main, self.test_path) + '{}.jpg'.format(f))
-            self.x_test.append(cv2.resize(test_img, (64, 64)))
-
-        self.x_test = np.array(self.x_test, np.float32) / 255.
-
-
-        return self.x_test
-
-    def do(self):
-
-
-        result = self.kfold_predict(self.x_test)
-
-
-        result = np.array(yfull_test[0])
-        for i in range(1, nfolds):
-            result += np.array(yfull_test[i])
-        result /= nfolds
-        result = pd.DataFrame(result, columns=labels_list)
-        result = pd.DataFrame(result, columns=labels)
-
-        thres = {'blow_down': 0.2,
-                 'bare_ground': 0.138,
-                 'conventional_mine': 0.1,
-                 'blooming': 0.168,
-                 'cultivation': 0.204,
-                 'artisinal_mine': 0.114,
-                 'haze': 0.204,
-                 'primary': 0.204,
-                 'slash_burn': 0.38,
-                 'habitation': 0.17,
-                 'clear': 0.13,
-                 'road': 0.156,
-                 'selective_logging': 0.154,
-                 'partly_cloudy': 0.112,
-                 'agriculture': 0.164,
-                 'water': 0.182,
-                 'cloudy': 0.076}
-
-        preds = []
-        for i in tqdm(range(result.shape[0]), miniters=1000):
-            a = result.ix[[i]]
-            pred_tag = []
-            for k, v in thres.items():
-                if (a[k][i] >= v):
-                    pred_tag.append(k)
-            preds.append(' '.join(pred_tag))
-
-        df_test['tags'] = preds
-        df_test.to_csv('sub.csv', index=False)
-
-
-    def kfold_predict(self, x_test, nfolds=3, batch_size=128):
-        model = self.amazon_sequential_custom_build()
-        yfull_test = []
-
-        for num_fold in range(1, nfolds + 1):
-            weight_path = os.path.join('' + 'weights_kfold_' + str(num_fold) + '.h5')
-
-            if os.path.isfile(weight_path):
-                model.load_weights(weight_path)
-
-            p_test = model.predict(x_test, batch_size=batch_size, verbose=2)
-            yfull_test.append(p_test)
-
-        result = np.array(yfull_test[0])
-        for i in range(1, nfolds):
-            result += np.array(yfull_test[i])
-        result /= nfolds
-
-        return result
-
