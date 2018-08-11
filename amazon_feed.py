@@ -22,6 +22,18 @@ class AmazonProcessor(BaseTask):
     """
     This class will be served as the main function to train the classifier, and build the submission file (csv).
     """
+
+    @staticmethod
+    def log_title(title):
+        logging.info('************************************')
+        logging.info('*********' + str(title) + '*********')
+        logging.info('************************************')
+
+    @staticmethod
+    def log_subtitle(title):
+        logging.info('*********' + str(title) + '*********')
+
+
     def iteration(self):
         self.defaults = BaseTask.defaults
         self.label_map = \
@@ -60,13 +72,13 @@ class AmazonProcessor(BaseTask):
         return self.result
 
     def _get_labels(self):
-        logging.info('Reading training labels')
+        self.log_subtitle('Reading training labels')
         self.df_labels = pd.read_csv(os.path.join(self.main, self.train_labels))
         logging.info('Successfully read training labels : ' + str(self.df_labels.shape))
         return self.df_labels
 
     def _get_test(self):
-        logging.info('Reading testing data')
+        self.log_subtitle('Reading testing data')
         self.submission_file = pd.read_csv(os.path.join(self.main, self.submission_file))
         logging.info('Successfully read submission data : ' + str(self.submission_file.shape))
         return self.submission_file
@@ -82,27 +94,27 @@ class AmazonProcessor(BaseTask):
             self.x_train.append(cv2.resize(train_img, (64, 64)))
             self.y_train.append(targets)
 
-            # flipped_img = cv2.flip(train_img, 1)
-            # rows, cols, channel = train_img.shape
+            flipped_img = cv2.flip(train_img, 1)
+            rows, cols, channel = train_img.shape
 
             # regular image
-            # self.x_train.append(img)
-            # self.y_train.append(targets)
+            self.x_train.append(train_img)
+            self.y_train.append(targets)
 
             # flipped image
-            # self.x_train.append(flipped_img)
-            # self.y_train.append(targets)
+            self.x_train.append(flipped_img)
+            self.y_train.append(targets)
 
-            # for rot_deg in [90, 180, 270]:
-            #     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), rot_deg, 1)
-            #     dst = cv2.warpAffine(img, M, (cols, rows))
-            #     self.x_train.append(dst)
-            #     self.y_train.append(targets)
-            #
-            #     dst = cv2.warpAffine(flipped_img, M, (cols, rows))
-            #     self.x_train.append(dst)
-            #     self.y_train.append(targets)
-            #
+            for rot_deg in [90, 180, 270]:
+                M = cv2.getRotationMatrix2D((cols / 2, rows / 2), rot_deg, 1)
+                dst = cv2.warpAffine(img, M, (cols, rows))
+                self.x_train.append(dst)
+                self.y_train.append(targets)
+
+                dst = cv2.warpAffine(flipped_img, M, (cols, rows))
+                self.x_train.append(dst)
+                self.y_train.append(targets)
+
             # self.y_train = np.array(self.y_train, np.uint8)
             # self.x_train = np.array(self.x_train, np.uint8)
 
@@ -146,6 +158,9 @@ class AmazonProcessor(BaseTask):
                       batch_size=128, verbose=2, epochs=10, callbacks=[callbacks],
                       shuffle=True)
 
+            from keras.utils import plot_model
+            plot_model(model, to_file='model.png')
+
             if os.path.isfile(kfold_weights_path):
                 model.load_weights(kfold_weights_path)
 
@@ -154,60 +169,8 @@ class AmazonProcessor(BaseTask):
             logging.info(fbeta_score(Y_valid, np.array(p_test) > 0.18, beta=2, average='samples'))
 
 
-    def build_prediction(self):
-
-        x_test = []
-
-        for f, tags in tqdm(self.submission_file.values, miniters=1000):
-            test_img = cv2.imread(os.path.join(self.main, self.test_path) + '{}.jpg'.format(f))
-            x_test.append(cv2.resize(test_img, (64, 64)))
-
-        x_test = np.array(x_test, np.float32) / 255.
-
-        result = self.kfold_predict(x_test)
-
-        labels_list = []
-        for tag in self.df_labels.tags.values:
-            labels = tag.split(' ')
-            for label in labels:
-                if label not in labels_list:
-                    labels_list.append(label)
-
-        result = pd.DataFrame(result, columns=labels_list)
-
-        thres = {'blow_down': 0.2,
-                 'bare_ground': 0.138,
-                 'conventional_mine': 0.1,
-                 'blooming': 0.168,
-                 'cultivation': 0.204,
-                 'artisinal_mine': 0.114,
-                 'haze': 0.204,
-                 'primary': 0.204,
-                 'slash_burn': 0.38,
-                 'habitation': 0.17,
-                 'clear': 0.13,
-                 'road': 0.156,
-                 'selective_logging': 0.154,
-                 'partly_cloudy': 0.112,
-                 'agriculture': 0.164,
-                 'water': 0.182,
-                 'cloudy': 0.076}
-
-        preds = []
-        for i in tqdm(range(result.shape[0]), miniters=1000):
-            res = result.ix[[i]]
-            pred_tag = []
-            for k, v in thres.items():
-                if res[k][i] >= v:
-                    pred_tag.append(k)
-            preds.append(' '.join(pred_tag))
-
-        df_test = pd.DataFrame()
-        df_test['tags'] = preds
-        df_test.to_csv('sub.csv', index=False)
-
-
     def predict(self, x_test, nfolds=3, batch_size=128):
+        self.log_subtitle('Prediction')
         model = self.amazon_sequential_custom_build()
         y_test = []
 
@@ -263,3 +226,56 @@ class AmazonProcessor(BaseTask):
             if os.path.isfile(weight_path):
                 custom_model.load_weights(weight_path)
         return custom_model
+
+    def build_prediction(self):
+
+        x_test = []
+
+        for f, tags in tqdm(self.submission_file.values, miniters=1000):
+            test_img = cv2.imread(os.path.join(self.main, self.test_path) + '{}.jpg'.format(f))
+            x_test.append(cv2.resize(test_img, (64, 64)))
+
+        x_test = np.array(x_test, np.float32) / 255.
+
+        result = self.predict(x_test)
+
+        labels_list = []
+        for tag in self.df_labels.tags.values:
+            labels = tag.split(' ')
+            for label in labels:
+                if label not in labels_list:
+                    labels_list.append(label)
+
+        result = pd.DataFrame(result, columns=labels_list)
+
+        thres = {'blow_down': 0.2,
+                 'bare_ground': 0.138,
+                 'conventional_mine': 0.1,
+                 'blooming': 0.168,
+                 'cultivation': 0.204,
+                 'artisinal_mine': 0.114,
+                 'haze': 0.204,
+                 'primary': 0.204,
+                 'slash_burn': 0.38,
+                 'habitation': 0.17,
+                 'clear': 0.13,
+                 'road': 0.156,
+                 'selective_logging': 0.154,
+                 'partly_cloudy': 0.112,
+                 'agriculture': 0.164,
+                 'water': 0.182,
+                 'cloudy': 0.076}
+
+        preds = []
+        for i in tqdm(range(result.shape[0]), miniters=1000):
+            res = result.ix[[i]]
+            pred_tag = []
+            for k, v in thres.items():
+                if res[k][i] >= v:
+                    pred_tag.append(k)
+            preds.append(' '.join(pred_tag))
+
+        if self.write_submission_file:
+            df_test = pd.DataFrame()
+            df_test['tags'] = preds
+            df_test.to_csv('sub.csv', index=False)
