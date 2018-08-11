@@ -15,7 +15,7 @@ import cv2
 import os
 from src.utillities.base_task import BaseTask
 from src.common.fcts import init_logger
-init_logger('~/PycharmProjects/AmazonKaggle-MlCapstone/', 'AmazonProccessor')
+init_logger('~/PycharmProjects/AmazonKaggle-MlCapstone/Logs/', 'AmazonProccessor')
 
 
 class AmazonProcessor(BaseTask):
