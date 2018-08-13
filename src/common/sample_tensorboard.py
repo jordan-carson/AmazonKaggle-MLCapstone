@@ -21,7 +21,8 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.utils import to_categorical
 from keras.callbacks import TensorBoard
-
+import pydot, graphviz
+from pydot import print_function
 import random
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -34,6 +35,7 @@ TRAIN_LABELS = 'train_v2.csv'
 SUBMISSION_FILE = 'sample_submission_v2.csv'
 TRAIN_PATH = 'train-jpg/'
 TEST_PATH = 'test-jpg/'
+
 
 print(MAIN)
 
@@ -59,21 +61,21 @@ for tag in df_labels.tags.values:
         if label not in labels_list:
             labels_list.append(label)
 
-def plot_pictures(label, df_train, train_path):
-
-    images = df_train[df_train[label] == 1].image_name.values
-
-    fig , ax = plt.subplots(nrows=3, ncols=3, figsize=(8,8))
-    ax = ax.flatten()
-
-    for i in range(0,9):
-        f = random.choice(images)
-        img = Image.open(os.path.join(train_path, f + '.jpg'))
-        ax[i].imshow(img)
-        ax[i].set_xticks([])
-        ax[i].set_yticks([])
-        ax[i].set_title("{}s h:{}s w:{}s".format(f, img.height, img.width))
-    plt.tight_layout()
+# def plot_pictures(label, df_train, train_path):
+#
+#     images = df_train[df_train[label] == 1].image_name.values
+#
+#     fig , ax = plt.subplots(nrows=3, ncols=3, figsize=(8,8))
+#     ax = ax.flatten()
+#
+#     for i in range(0,9):
+#         f = random.choice(images)
+#         img = Image.open(os.path.join(train_path, f + '.jpg'))
+#         ax[i].imshow(img)
+#         ax[i].set_xticks([])
+#         ax[i].set_yticks([])
+#         ax[i].set_title("{}s h:{}s w:{}s".format(f, img.height, img.width))
+#     plt.tight_layout()
 
 
 
@@ -250,15 +252,22 @@ for train_index, test_index in kf:
     #               batch_size=128, verbose=2, epochs=epochs, callbacks=callbacks, shuffle=True)
 
     model.compile(loss='binary_crossentropy', optimizer=Adam(lr=1e-4), metrics=['accuracy'])
-    tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
-    callbacks = [
-        EarlyStopping(monitor='val_loss', patience=2, verbose=0, min_delta=1e-4),  # adding min_delta
-        ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, cooldown=0, min_lr=1e-7, verbose=1),  # new callback
-        ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0)]
+    # tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
+    # callbacks = [
+    #     EarlyStopping(monitor='val_loss', patience=2, verbose=0, min_delta=1e-4),  # adding min_delta
+    #     ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, cooldown=0, min_lr=1e-7, verbose=1),  # new callback
+    #     ModelCheckpoint(kfold_weights_path, monitor='val_loss', save_best_only=True, verbose=0)]
+
+
+
 
     model.fit(x=X_train, y=Y_train, validation_data=(X_valid, Y_valid),
-              batch_size=128, verbose=2, epochs=10, callbacks=[tensorboard],
+              batch_size=128, verbose=2, epochs=1, #callbacks=[callbacks],
               shuffle=True)
+
+    from keras.utils.vis_utils import plot_model
+
+    plot_model(model, to_file='model.png')
 
     if os.path.isfile(kfold_weights_path):
         model.load_weights(kfold_weights_path)

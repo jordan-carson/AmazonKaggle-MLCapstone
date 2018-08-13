@@ -14,8 +14,8 @@ import numpy as np
 import cv2
 import os
 from src.utillities.base_task import BaseTask
-from src.common.fcts import init_logger
-init_logger('~/PycharmProjects/AmazonKaggle-MlCapstone/Logs/', 'AmazonProccessor')
+from src.common import fcts
+fcts.init_logger('~/PycharmProjects/AmazonKaggle-MlCapstone/Logs/', 'AmazonProccessor')
 
 
 class AmazonProcessor(BaseTask):
@@ -107,7 +107,7 @@ class AmazonProcessor(BaseTask):
 
             for rot_deg in [90, 180, 270]:
                 M = cv2.getRotationMatrix2D((cols / 2, rows / 2), rot_deg, 1)
-                dst = cv2.warpAffine(img, M, (cols, rows))
+                dst = cv2.warpAffine(train_img, M, (cols, rows))
                 self.x_train.append(dst)
                 self.y_train.append(targets)
 

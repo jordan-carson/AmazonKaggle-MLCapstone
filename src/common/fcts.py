@@ -168,39 +168,12 @@ def n_crossvalidation(nfolds, num_fold, sum_score, y_train, x_train, y_test, x_t
 
         p_valid = model.predict(X_valid, batch_size=128, verbose=2)
         print(fbeta_score(Y_valid, np.array(p_valid) > 0.2, beta=2, average='samples'))
-        print("Optimizing prediction threshold")
-        print(optimise_f2_thresholds(Y_valid, p_valid))
 
         p_test = model.predict(x_train, batch_size=128, verbose=2)
         yfull_train.append(p_test)
 
         p_test = model.predict(x_test, batch_size=128, verbose=2)
         yfull_test.append(p_test)
-
-
-def optimise_f2_thresholds(y, p, verbose=True, resolution=100):
-  def mf(x):
-    p2 = np.zeros_like(p)
-    for i in range(17):
-      p2[:, i] = (p[:, i] > x[i]).astype(np.int)
-    score = fbeta_score(y, p2, beta=2, average='samples')
-    return score
-
-  x = [0.2]*17
-  for i in range(17):
-    best_i2 = 0
-    best_score = 0
-    for i2 in range(resolution):
-      i2 /= resolution
-      x[i] = i2
-      score = mf(x)
-      if score > best_score:
-        best_i2 = i2
-        best_score = score
-    x[i] = best_i2
-    if verbose:
-      print(i, best_i2, best_score)
-  return x
 
 
 
