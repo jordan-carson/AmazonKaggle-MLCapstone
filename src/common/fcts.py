@@ -25,7 +25,15 @@ from sklearn.cross_validation import KFold
 # init_logger('~/PycharmProjects/AmazonKaggle-MLCapstone/Logs', 'Utility')
 
 def plot_pictures(label, df_train, train_path):
+    """
+    Helper function to plot pictures based off a label.
 
+    For example:
+        print(plot_pictures('clear', df_train, TRAIN_PATH)
+
+    Returns:
+        A 3 by 3 grid (9 Pictures) of pictures containing that tag.
+    """
     images = df_train[df_train[label] == 1].image_name.values
 
     fig , ax = plt.subplots(nrows=3, ncols=3, figsize=(8,8))
@@ -42,6 +50,19 @@ def plot_pictures(label, df_train, train_path):
 
 
 def init_logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
+    """
+    Logger initializer, prints logging to a specific directory, and names it based on
+    your process_name + Process ID (PID).
+
+    :param log_dir:
+    :param process_name:
+    :param loglevel_file:
+    :param loglevel_stdout:
+
+    Returns:
+        writes logs to a directory, if the directory doesn't exist it will create it and save the file in format
+        process_name + PID + time.
+    """
     logging.getLogger().setLevel(logging.NOTSET)  # 0
     logging.getLogger().handlers = []
     timestamp = datetime.datetime.now().strftime('%Y%m%d')
@@ -80,6 +101,16 @@ def init_logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
 
 
 def get_optimal_threshhold(true_label, prediction, iterations = 100):
+    """
+    Function designed to get each labels optimal f2 thresholds.
+
+    :param true_label:
+    :param prediction:
+    :param iterations:
+
+    Returns:
+        0-16 thresholds
+    """
 
     best_threshhold = [0.2]*17
     for t in range(17):
@@ -95,6 +126,14 @@ def get_optimal_threshhold(true_label, prediction, iterations = 100):
 
 
 def create_model_vgg16(image_dimensions=(128, 128, 3)):
+    """
+    function designed to create a vgg16 model. Use model.comile() etc.
+    :param image_dimensions:
+    :return:
+
+        Keras Vgg16 Model (Keras Object)
+
+    """
     input_tensor = Input(shape=image_dimensions)
     bn = BatchNormalization()(input_tensor)
     base_model = VGG16(include_top=False, weights='imagenet', input_shape=image_dimensions)
@@ -106,16 +145,39 @@ def create_model_vgg16(image_dimensions=(128, 128, 3)):
 
 
 def fbeta(true_label, prediction):
-   return fbeta_score(true_label, prediction, beta=2, average='samples')
+    """
+    Function to calculate Fbeta score using the true label and prediction.
+
+    Hard-coding beta=2, average = 'samples'
+    :param true_label:
+    :param prediction:
+    :return:
+
+        Fbeta score, use while training the model in our ModelClass.
+
+    """
+    return fbeta_score(true_label, prediction, beta=2, average='samples')
 
 
 def fbeta_2(model, X_valid, y_valid):
+    """
+    Function to calculate Fbeta score using the true label and prediction.
+
+    p_valid > 0.2
+
+    :param true_label:
+    :param prediction:
+    :return:
+
+        Fbeta score, use while training the model in our ModelClass.
+
+    """
     p_valid = model.predict(X_valid)
     return fbeta_score(y_valid, np.array(p_valid) > 0.2, beta=2, average='samples')
 
 
 def n_crossvalidation(nfolds, num_fold, sum_score, y_train, x_train, y_test, x_test):
-    logging.info("creating cross validation before building the network model")
+    """Model to create a nfold cross - validation, model"""
     yfull_test = []
     yfull_train = []
 

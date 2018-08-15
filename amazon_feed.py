@@ -25,16 +25,26 @@ class AmazonProcessor(BaseTask):
 
     @staticmethod
     def log_title(title):
+        """
+        Static function to log the title
+        """
         logging.info('************************************')
         logging.info('*********' + str(title) + '*********')
         logging.info('************************************')
 
     @staticmethod
     def log_subtitle(title):
+        """
+        Static function to log the sub-title
+        """
         logging.info('*********' + str(title) + '*********')
 
 
     def iteration(self):
+        """
+        Base function of our class, this function is used to build the entire model from start to end.
+        :return: Boolean resulting in the success or fail our of our network.
+        """
         self.defaults = BaseTask.defaults
         self.label_map = \
                 {'blow_down'        : 0,
@@ -72,12 +82,20 @@ class AmazonProcessor(BaseTask):
         return self.result
 
     def _get_labels(self):
+        """
+        Protected function: used to get the training data
+        :return: pandas dataframe
+        """
         self.log_subtitle('Reading training labels')
         self.df_labels = pd.read_csv(os.path.join(self.main, self.train_labels))
         logging.info('Successfully read training labels : ' + str(self.df_labels.shape))
         return self.df_labels
 
     def _get_test(self):
+        """
+        Protected function: used to get the validation/testing data
+        :return: pandas dataframe
+        """
         self.log_subtitle('Reading testing data')
         self.submission_file = pd.read_csv(os.path.join(self.main, self.submission_file))
         logging.info('Successfully read submission data : ' + str(self.submission_file.shape))
@@ -124,6 +142,12 @@ class AmazonProcessor(BaseTask):
         return self.build_training_classifier(self.x_train, self.y_train)
 
     def build_training_classifier(self, x_train, y_train):
+        """
+        Function to build the training classifier taking the processed training data as input.
+        :param x_train:
+        :param y_train:
+        :return:
+        """
 
         model = self.amazon_sequential_custom_build()
 
@@ -191,8 +215,8 @@ class AmazonProcessor(BaseTask):
         return result
 
     def amazon_sequential_custom_build(self, input_shape=(128, 128), weight_path=None):
-        """
-        :param input_shape:
+        """ Function to build the entire Keras CNN, providing input shape
+        :param input_shape: (128x128)
         :return: Keras Object
         """
         custom_model = Sequential()
@@ -228,6 +252,13 @@ class AmazonProcessor(BaseTask):
         return custom_model
 
     def build_prediction(self):
+        """
+        Function to build the prediction dataframe leveraging the results from self.predict()
+
+        Returns:
+            Pandas dataframe which writes its output to a csv in the os.getcwd() directory titled
+            -> AmazonKaggle_submissionfile.csv
+        """
 
         x_test = []
 
@@ -278,4 +309,4 @@ class AmazonProcessor(BaseTask):
         if self.write_submission_file:
             df_test = pd.DataFrame()
             df_test['tags'] = preds
-            df_test.to_csv('sub.csv', index=False)
+            df_test.to_csv('AmazonKaggle_submissionfile.csv', index=False)
