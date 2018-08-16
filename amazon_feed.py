@@ -15,12 +15,19 @@ import cv2
 import os
 from src.utillities.base_task import BaseTask
 from src.common import fcts
-fcts.init_logger('~/PycharmProjects/AmazonKaggle-MlCapstone/Logs/', 'AmazonProccessor')
+fcts.logger('~/PycharmProjects/AmazonKaggle-MlCapstone/Logs/', 'AmazonProccessor')
 
 
 class AmazonProcessor(BaseTask):
     """
     This class will be served as the main function to train the classifier, and build the submission file (csv).
+    We inherit a BaseClass who's function is to parse a dictionary of parameters to create instance variables.
+
+    Example:
+        params = {}
+        parmas['batch_size'] = 128
+        obj = AmazonProcessor(**params)
+        obj.run()
     """
 
     @staticmethod
@@ -38,7 +45,6 @@ class AmazonProcessor(BaseTask):
         Static function to log the sub-title
         """
         logging.info('*********' + str(title) + '*********')
-
 
     def iteration(self):
         """

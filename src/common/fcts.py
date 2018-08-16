@@ -49,7 +49,7 @@ def plot_pictures(label, df_train, train_path):
     plt.tight_layout()
 
 
-def init_logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
+def logger(log_dir, process_name, loglevel_file=20, loglevel_stdout=40):
     """
     Logger initializer, prints logging to a specific directory, and names it based on
     your process_name + Process ID (PID).
